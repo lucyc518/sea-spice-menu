@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>香海鲜鱼庄 · Sea & Spice</title>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#080604}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
+const { useState } = React;
+
+/* ── COLOURS ── */
+const C = {
+  bg:"#080604", surface:"#130E08", card:"#1C1409", cardHi:"#2E200F",
+  gold:"#C9963A", goldL:"#E4BF72", goldD:"#7A5A1E",
+  ember:"#B83A1A", flame:"#D4541E", orange:"#E07830",
+  cream:"#EDE0C4", creamD:"#9A8060", creamF:"#5A4A32",
+  white:"#FFFFFF", border:"#2E2010", green:"#4A7A3A",
+};
+
+/* ── DATA ── */
+const FISH = [
+  { id:"bass",  zh:"银鲈鱼",   en:"Silver Perch 700g",      price:59,  tag:"",   desc:"肉质细滑丰腴", note:"嫩滑首选" },
+  { id:"mud",   zh:"盲曹",     en:"Mud Grouper 700g",       price:59,  tag:"热销", desc:"肉质细腻鲜嫩", note:"店长推荐" },
+  { id:"star",  zh:"游水星斑", en:"Live Star Grouper ~1.2kg",price:145, tag:"精选", desc:"鲜甜回甘Q弹",  note:"顶级之选" },
+];
+
+const NUMBING = [
+  { id:"temai",  zh:"特麻", en:"Extra Numbing",  n:3 },
+  { id:"zhongma",zh:"中麻", en:"Medium Numbing", n:2, rec:true },
+  { id:"weima",  zh:"微麻", en:"Mild Numbing",   n:1 },
+];
+const SPICY = [
+  { id:"telai",   zh:"特辣", en:"Extra Spicy",   n:3 },
+  { id:"zhonglai",zh:"中辣", en:"Medium Spicy",  n:2, rec:true },
+  { id:"weilai",  zh:"微辣", en:"Mild Spicy",    n:1 },
+];
+
+const BROTHS = [
+  { id:"spicy",  zh:"牛油（全辣）",en:"Spicy Butter",   emoji:"🔴", color:"#8B1A0A", acc:"#C0392B" },
+  { id:"orig",   zh:"原汤",       en:"Original Broth", emoji:"🫕", color:"#6B4A0A", acc:"#D4A853" },
+  { id:"mush",   zh:"菌菇",       en:"Mushroom Broth", emoji:"🍄", color:"#3A3010", acc:"#8B7A2E" },
+  { id:"tom",    zh:"番茄",       en:"Tomato Broth",   emoji:"🍅", color:"#7A2A0A", acc:"#E74C3C" },
+];
+
+const ADDONS = [
+  // 加鱼片
+  { id:"fp1", zh:"银鲈鱼片",   en:"Silver Perch Slices",  price:29.80, cat:"加鱼片", hot:false, emoji:"🐟", half:true },
+  { id:"fp2", zh:"盲曹鱼片",   en:"Mud Grouper Slices",   price:29.80, cat:"加鱼片", hot:true,  emoji:"🐟", half:true },
+  { id:"fp3", zh:"星斑鱼片",   en:"Star Grouper Slices",  price:68.00, cat:"加鱼片", hot:false, emoji:"🐟", half:true },
+  // 荤菜
+  { id:"h1",  zh:"香海虾滑",   en:"Shrimp Paste",         price:19.80, cat:"荤菜",   hot:true,  emoji:"🦐", half:true,  desc:"手打新鲜虾滑" },
+  { id:"h2",  zh:"秘制鱼丸",   en:"Fish Balls",           price:18.80, cat:"荤菜",   hot:true,  emoji:"⚪", half:true,  desc:"手打新鲜鱼丸" },
+  { id:"h3",  zh:"鲍鱼片",     en:"Abalone Slices",       price:88.00, cat:"荤菜",   hot:true,  emoji:"🫙", half:true,  desc:"野生黑边鲍" },
+  { id:"h4",  zh:"M9+ 和牛",   en:"M9+ Wagyu Beef",       price:null,  cat:"荤菜",   hot:true,  emoji:"🥩", half:false, desc:"顶级和牛" },
+  { id:"h5",  zh:"豹参",        en:"Sea Cucumber",         price:29.80, cat:"荤菜",   hot:false, emoji:"🌊", half:true },
+  { id:"h6",  zh:"虎虾",        en:"Tiger Prawns",         price:null,  cat:"荤菜",   hot:false, emoji:"🦐", half:false },
+  { id:"h7",  zh:"手切鲜羊肉", en:"Fresh Hand-cut Lamb",  price:null,  cat:"荤菜",   hot:false, emoji:"🥩", half:false, desc:"鱼汤涮羊肉" },
+  { id:"h8",  zh:"手切和牛三花趾",en:"Wagyu Tri-tip",     price:14.50, cat:"荤菜",   hot:false, emoji:"🥩", half:true },
+  { id:"h9",  zh:"羊肉卷",     en:"Lamb Roll",            price:12.80, cat:"荤菜",   hot:false, emoji:"🥩", half:true },
+  { id:"h10", zh:"肥牛卷",     en:"Wagyu Beef Roll",      price:12.80, cat:"荤菜",   hot:false, emoji:"🥩", half:true },
+  { id:"h11", zh:"现切千层肚", en:"Honeycomb Tripe",      price:16.80, cat:"荤菜",   hot:false, emoji:"🫀", half:true },
+  { id:"h12", zh:"黑毛肚",     en:"Black Beef Tripe",     price:19.80, cat:"荤菜",   hot:false, emoji:"🫀", half:true },
+  { id:"h13", zh:"黄喉",       en:"Beef Aorta",           price:16.80, cat:"荤菜",   hot:false, emoji:"🫀", half:true },
+  { id:"h14", zh:"鸭舌",       en:"Duck Tongue",          price:16.80, cat:"荤菜",   hot:false, emoji:"🦆", half:true },
+  { id:"h15", zh:"牛百叶",     en:"Beef Omasum",          price:16.80, cat:"荤菜",   hot:false, emoji:"🫀", half:true },
+  { id:"h16", zh:"鸭掌",       en:"Duck Feet",            price:16.80, cat:"荤菜",   hot:false, emoji:"🦆", half:true },
+  { id:"h17", zh:"午餐肉",     en:"Luncheon Meat",        price:9.80,  cat:"荤菜",   hot:false, emoji:"🥫", half:true },
+  { id:"h18", zh:"迷你广式香肠",en:"Mini Cantonese Sausage",price:9.80,cat:"荤菜",  hot:false, emoji:"🌭", half:true },
+  { id:"h19", zh:"蟹肉棒",     en:"Crab Sticks",          price:9.80,  cat:"荤菜",   hot:false, emoji:"🦀", half:true },
+  { id:"h20", zh:"花枝丸",     en:"Cuttlefish Balls",     price:9.80,  cat:"荤菜",   hot:false, emoji:"⚪", half:true },
+  { id:"h21", zh:"龙虾丸",     en:"Lobster Balls",        price:9.80,  cat:"荤菜",   hot:false, emoji:"🦞", half:true },
+  { id:"h22", zh:"鱼包蛋",     en:"Fish Wrapped Egg",     price:12.80, cat:"荤菜",   hot:false, emoji:"🥚", half:true },
+  { id:"h23", zh:"鱼豆腐",     en:"Fish Tofu",            price:8.80,  cat:"荤菜",   hot:false, emoji:"🟨", half:true },
+  { id:"h24", zh:"鹌鹑蛋",     en:"Quail Eggs",           price:9.80,  cat:"荤菜",   hot:false, emoji:"🥚", half:true },
+  { id:"h25", zh:"鸭血",       en:"Duck Blood Curd",      price:9.80,  cat:"荤菜",   hot:false, emoji:"🟫", half:true },
+  { id:"h26", zh:"鲜盲曹鱼肚(限量)",en:"Grouper Maw Ltd", price:9.80, cat:"荤菜",   hot:false, emoji:"🐠", half:true, desc:"富含胶原蛋白" },
+  // 素菜
+  { id:"v1",  zh:"竹笋片",  en:"Bamboo Shoots",       price:8.80, cat:"素菜", hot:true,  emoji:"🌿", half:true },
+  { id:"v2",  zh:"黄豆芽",  en:"Bean Sprouts",        price:7.80, cat:"素菜", hot:true,  emoji:"🌱", half:true },
+  { id:"v3",  zh:"魔芋",    en:"Konjac",              price:8.80, cat:"素菜", hot:false, emoji:"⬜", half:true },
+  { id:"v4",  zh:"鲍鱼菇",  en:"Abalone Mushroom",    price:8.80, cat:"素菜", hot:false, emoji:"🍄", half:true },
+  { id:"v5",  zh:"金针菇",  en:"Enoki Mushroom",      price:8.80, cat:"素菜", hot:false, emoji:"🍄", half:true },
+  { id:"v6",  zh:"土豆",    en:"Potato",              price:4.80, cat:"素菜", hot:false, emoji:"🥔", half:true },
+  { id:"v7",  zh:"藕片",    en:"Lotus Root",          price:6.80, cat:"素菜", hot:false, emoji:"🪷", half:true },
+  { id:"v8",  zh:"铁棍山药",en:"Iron-stick Yam",      price:9.80, cat:"素菜", hot:false, emoji:"🍠", half:true },
+  { id:"v9",  zh:"莴笋条",  en:"Lettuce Stems",       price:8.80, cat:"素菜", hot:false, emoji:"🥬", half:true },
+  { id:"v10", zh:"白萝卜",  en:"White Radish",        price:6.80, cat:"素菜", hot:false, emoji:"⬜", half:true },
+  { id:"v11", zh:"冬瓜",    en:"Winter Melon",        price:6.80, cat:"素菜", hot:false, emoji:"🍈", half:true },
+  { id:"v12", zh:"西红柿",  en:"Tomato",              price:5.80, cat:"素菜", hot:false, emoji:"🍅", half:true },
+  { id:"v13", zh:"西兰花",  en:"Broccoli",            price:6.80, cat:"素菜", hot:false, emoji:"🥦", half:true },
+  { id:"v14", zh:"有机花菜",en:"Cauliflower",         price:6.80, cat:"素菜", hot:false, emoji:"🥦", half:true },
+  { id:"v15", zh:"甜玉米",  en:"Sweet Corn",          price:4.80, cat:"素菜", hot:false, emoji:"🌽", half:true },
+  { id:"v16", zh:"黄瓜",    en:"Cucumber",            price:8.80, cat:"素菜", hot:false, emoji:"🥒", half:true },
+  { id:"v17", zh:"贡菜",    en:"Salted Mustard",      price:8.80, cat:"素菜", hot:false, emoji:"🌿", half:true },
+  { id:"v18", zh:"茼蒿",    en:"Crown Daisy",         price:8.80, cat:"素菜", hot:false, emoji:"🌿", half:true },
+  { id:"v19", zh:"生菜",    en:"Lettuce",             price:5.80, cat:"素菜", hot:false, emoji:"🥬", half:true },
+  { id:"v20", zh:"大白菜",  en:"Napa Cabbage",        price:5.80, cat:"素菜", hot:false, emoji:"🥬", half:true },
+  { id:"v21", zh:"油麦菜",  en:"Romaine Lettuce",     price:6.80, cat:"素菜", hot:false, emoji:"🥬", half:true },
+  { id:"v22", zh:"豆腐",    en:"Tofu",                price:6.80, cat:"素菜", hot:false, emoji:"⬜", half:true },
+  { id:"v23", zh:"冻豆腐",  en:"Frozen Tofu",         price:7.80, cat:"素菜", hot:false, emoji:"⬜", half:true },
+  { id:"v24", zh:"厚百叶",  en:"Thick Tofu Sheet",    price:7.80, cat:"素菜", hot:false, emoji:"🟨", half:true },
+  { id:"v25", zh:"豆腐皮",  en:"Tofu Skin",           price:8.80, cat:"素菜", hot:false, emoji:"🟨", half:true },
+  { id:"v26", zh:"腐竹",    en:"Tofu Rolls",          price:7.80, cat:"素菜", hot:false, emoji:"🟨", half:true },
+  // 主食
+  { id:"s1", zh:"白米饭",   en:"Steamed Rice",        price:3.50,  cat:"主食", hot:false, emoji:"🍚", half:false },
+  { id:"s2", zh:"蛋炒饭",   en:"Egg Fried Rice",      price:12.80, cat:"主食", hot:true,  emoji:"🍳", half:false, desc:"镬气十足" },
+  { id:"s3", zh:"手工面条", en:"Handmade Noodles",    price:9.80,  cat:"主食", hot:false, emoji:"🍜", half:false },
+  { id:"s4", zh:"年糕",     en:"Rice Cake",           price:8.80,  cat:"主食", hot:false, emoji:"🟫", half:false },
+  { id:"s5", zh:"粉丝",     en:"Glass Noodles",       price:6.80,  cat:"主食", hot:false, emoji:"🌾", half:false },
+  // 饮料
+  { id:"d1", zh:"可乐",       en:"Coca-Cola 330ml",   price:4.50, cat:"饮料", hot:false, emoji:"🥤", half:false },
+  { id:"d2", zh:"雪碧",       en:"Sprite 330ml",      price:4.50, cat:"饮料", hot:false, emoji:"🥤", half:false },
+  { id:"d3", zh:"矿泉水",     en:"Still Water 600ml", price:3.00, cat:"饮料", hot:false, emoji:"💧", half:false },
+  { id:"d4", zh:"蜜桃乌龙茶",en:"Peach Oolong Tea",  price:7.80, cat:"饮料", hot:true,  emoji:"🍑", half:false, desc:"消暑解腻" },
+  { id:"d5", zh:"柠檬茶",    en:"Lemon Tea",          price:7.80, cat:"饮料", hot:false, emoji:"🍋", half:false },
+  { id:"d6", zh:"杨梅汁",    en:"Bayberry Juice",     price:7.80, cat:"饮料", hot:false, emoji:"🍇", half:false, desc:"解辣必备" },
+  { id:"d7", zh:"青岛啤酒",  en:"Tsingtao Beer 330ml",price:8.00, cat:"饮料", hot:false, emoji:"🍺", half:false },
+  { id:"d8", zh:"红牛",      en:"Red Bull 250ml",     price:6.00, cat:"饮料", hot:false, emoji:"🐂", half:false },
+  // 儿童套餐
+  { id:"k1", zh:"儿童炸鱼薯条",en:"Kids Fish & Chips",      price:14.80, cat:"儿童套餐", hot:false, emoji:"🍟", half:false, desc:"酥脆炸鱼配薯条" },
+  { id:"k2", zh:"儿童汤面",    en:"Kids Noodle Soup",       price:12.80, cat:"儿童套餐", hot:false, emoji:"🍜", half:false, desc:"清甜原汤手工细面" },
+  { id:"k3", zh:"儿童蛋炒饭",  en:"Kids Egg Fried Rice",    price:11.80, cat:"儿童套餐", hot:false, emoji:"🍳", half:false, desc:"滑嫩炒蛋香糯米饭" },
+  { id:"k4", zh:"儿童鸡米花",  en:"Kids Chicken Nuggets",   price:11.80, cat:"儿童套餐", hot:false, emoji:"🍗", half:false, desc:"外酥内嫩儿童喜爱" },
+];
+
+const CATS = ["热销首选","加鱼片","荤菜","素菜","主食","饮料","儿童套餐"];
+const CAT_ICONS = {"热销首选":"🔥","加鱼片":"🐟","荤菜":"🥩","素菜":"🥬","主食":"🍚","饮料":"🥤","儿童套餐":"👦"};
+
+/* ── TINY HELPERS ── */
+const Btn = ({ label, onClick, disabled, style = {} }) => (
+  <button onClick={onClick} disabled={disabled} style={{
+    width:"100%", padding:"17px", borderRadius:14, border:"none",
+    background: disabled ? C.cardHi : `linear-gradient(135deg,${C.ember},${C.orange})`,
+    color: disabled ? C.creamF : C.white,
+    fontSize:15, fontWeight:800, cursor: disabled ? "default" : "pointer",
+    fontFamily:"Georgia,serif", letterSpacing:1, marginTop:12,
+    boxShadow: disabled ? "none" : `0 4px 16px rgba(180,60,20,0.4)`,
+    ...style,
+  }}>{label}</button>
+);
+
+const Badge = ({ text, color = C.ember }) => (
+  <span style={{
+    background: color, color: C.white,
+    fontSize:9, fontWeight:800, padding:"2px 6px",
+    borderRadius:20, whiteSpace:"nowrap", fontFamily:"sans-serif",
+  }}>{text}</span>
+);
+
+const GoldBadge = ({ text }) => (
+  <span style={{
+    background:`linear-gradient(135deg,${C.gold},${C.goldL})`, color:C.bg,
+    fontSize:9, fontWeight:800, padding:"2px 6px",
+    borderRadius:20, whiteSpace:"nowrap", fontFamily:"sans-serif",
+  }}>{text}</span>
+);
+
+const Radio = ({ on, color = C.ember }) => (
+  <div style={{
+    width:24, height:24, borderRadius:"50%", flexShrink:0,
+    border:`2px solid ${on ? color : C.creamF}`,
+    background: on ? color : "transparent",
+    display:"flex", alignItems:"center", justifyContent:"center",
+    color:C.white, fontSize:13, transition:"all 0.2s",
+  }}>{on ? "✓" : ""}</div>
+);
+
+const NavBar = ({ title, sub, onBack }) => (
+  <div style={{
+    padding:"15px 18px 12px", background:C.surface,
+    borderBottom:`1px solid ${C.border}`,
+    position:"sticky", top:0, zIndex:50,
+    display:"flex", alignItems:"center", gap:12,
+  }}>
+    <button onClick={onBack} style={{
+      background:C.card, border:`1px solid ${C.border}`,
+      borderRadius:10, padding:"7px 12px", color:C.cream,
+      cursor:"pointer", fontSize:12, fontFamily:"sans-serif", flexShrink:0,
+    }}>← 返回</button>
+    <div>
+      <div style={{fontSize:16, fontWeight:700, color:C.cream, fontFamily:"Georgia,serif"}}>{title}</div>
+      {sub && <div style={{fontSize:11, color:C.creamD, marginTop:2, fontFamily:"sans-serif"}}>{sub}</div>}
+    </div>
+  </div>
+);
+
+const Card = ({ selected, onClick, accent = C.ember, children }) => (
+  <div onClick={onClick} style={{
+    background: selected ? `${accent}18` : C.card,
+    border:`2px solid ${selected ? accent : C.border}`,
+    borderRadius:16, padding:"18px", marginBottom:10,
+    cursor:"pointer", transition:"all 0.2s",
+  }}>{children}</div>
+);
+
+/* ── CART BAR ── */
+function CartBar({ cart, onCheckout }) {
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  if (!count) return null;
+  return (
+    <div style={{
+      position:"fixed", bottom:0, left:0, right:0, zIndex:100,
+      background:`linear-gradient(135deg,${C.ember},${C.orange})`,
+      padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between",
+      boxShadow:"0 -4px 20px rgba(0,0,0,0.5)",
+    }}>
+      <span style={{color:C.white, fontFamily:"sans-serif", fontSize:14}}>
+        🛒 {count} 件
+      </span>
+      <span style={{color:C.white, fontWeight:900, fontSize:18, fontFamily:"Georgia,serif"}}>
+        ${total.toFixed(2)} AUD
+      </span>
+      <button onClick={onCheckout} style={{
+        background:C.white, color:C.ember, border:"none",
+        borderRadius:20, padding:"9px 20px", fontWeight:800,
+        fontSize:14, cursor:"pointer", fontFamily:"sans-serif",
+      }}>确认下单</button>
+    </div>
+  );
+}
+
+/* ── HOME ── */
+function Home({ onSelect }) {
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:30}}>
+      {/* Header */}
+      <div style={{
+        padding:"18px 20px 14px", background:C.surface,
+        borderBottom:`1px solid ${C.border}`,
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }}>
+        <div>
+          <div style={{fontSize:22, fontWeight:800, color:C.goldL, letterSpacing:3}}>香海鲜鱼庄</div>
+          <div style={{fontSize:10, color:C.creamD, letterSpacing:5, marginTop:2}}>SEA & SPICE</div>
+        </div>
+        <div style={{display:"flex", gap:8}}>
+          <div style={{background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"6px 12px", fontSize:12, color:C.creamD, fontFamily:"sans-serif"}}>🪑 A12</div>
+          <div style={{background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"6px 12px", fontSize:12, color:C.creamD, fontFamily:"sans-serif"}}>中/EN</div>
+        </div>
+      </div>
+
+      {/* Banner */}
+      <div onClick={() => onSelect("fhp")} style={{
+        margin:"16px 18px 14px", borderRadius:20, overflow:"hidden",
+        background:`linear-gradient(135deg,#2A0800,#5C1500,#8B2800)`,
+        border:`1.5px solid ${C.goldD}`, cursor:"pointer", position:"relative",
+        boxShadow:`0 8px 30px rgba(180,60,20,0.3)`,
+      }}>
+        <div style={{padding:"20px", position:"relative"}}>
+          <div style={{display:"flex", gap:8, marginBottom:10}}>
+            <GoldBadge text="招牌特色" />
+            <GoldBadge text="本店独创" />
+          </div>
+          <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:28, fontWeight:900, color:C.white, marginBottom:6}}>🔥 鱼火锅</div>
+              <div style={{fontSize:13, color:C.goldL, fontWeight:600, marginBottom:4}}>一锅两吃 · 先鲜后烫</div>
+              <div style={{fontSize:11, color:"rgba(245,220,170,0.7)", lineHeight:1.6}}>外圈嫩滑鱼肉 · 内圈涮烫百味</div>
+            </div>
+            <div style={{fontSize:64, opacity:0.9}}>🐟</div>
+          </div>
+          <div style={{marginTop:14, display:"flex", justifyContent:"flex-end"}}>
+            <div style={{
+              background:`linear-gradient(135deg,${C.gold},${C.goldL})`,
+              color:C.bg, borderRadius:20, padding:"8px 18px",
+              fontWeight:800, fontSize:13, fontFamily:"sans-serif",
+            }}>立即选择 →</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div style={{padding:"4px 20px 12px", display:"flex", alignItems:"center", gap:10}}>
+        <div style={{flex:1, height:1, background:C.border}} />
+        <span style={{fontSize:11, color:C.creamD, letterSpacing:3, fontFamily:"sans-serif"}}>或单独点选</span>
+        <div style={{flex:1, height:1, background:C.border}} />
+      </div>
+
+      {/* 4 cards */}
+      <div style={{padding:"0 18px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+        {[
+          { id:"cold",   emoji:"🌶️", title:"冷锅鱼",   en:"Cold Pot Fish",  sub:"鲈鱼·盲曹·星斑", desc:"红油翻滚·麻辣鲜香", col:C.ember },
+          { id:"pickled",emoji:"🟡", title:"酸菜鱼",   en:"Pickled Fish",   sub:"鲈鱼·盲曹·星斑", desc:"黄金酸汤·清爽开胃", col:"#8B7A10" },
+          { id:"hotpot", emoji:"🫕", title:"单点火锅", en:"Hot Pot",        sub:"鸳鸯·奔驰锅", desc:"多种精选锅底", col:C.goldD },
+          { id:"addons", emoji:"➕", title:"配菜加点", en:"Add-ons",        sub:"荤素·主食·饮料", desc:"自由加购", col:C.green },
+        ].map(c => (
+          <div key={c.id} onClick={() => onSelect(c.id)} style={{
+            background:C.card, border:`1.5px solid ${C.border}`,
+            borderRadius:18, padding:"18px 14px", cursor:"pointer",
+          }}>
+            <div style={{fontSize:34, marginBottom:8}}>{c.emoji}</div>
+            <div style={{fontSize:17, fontWeight:800, color:C.cream, marginBottom:2}}>{c.title}</div>
+            <div style={{fontSize:10, color:C.creamD, marginBottom:6, fontFamily:"sans-serif"}}>{c.en}</div>
+            <div style={{height:1, background:C.border, margin:"6px 0"}} />
+            <div style={{fontSize:11, color:c.col, fontWeight:600, fontFamily:"sans-serif"}}>{c.desc}</div>
+            <div style={{fontSize:10, color:C.creamF, marginTop:2, fontFamily:"sans-serif"}}>{c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{margin:"14px 18px 0", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"12px 14px", display:"flex", gap:8, alignItems:"center"}}>
+        <span style={{fontSize:14}}>💡</span>
+        <span style={{fontSize:11, color:C.creamD, fontFamily:"sans-serif"}}>
+          首次光临？推荐体验本店招牌
+          <span style={{color:C.goldL, fontWeight:700}}>「鱼火锅」</span>
+          ——一锅两吃，感受双重鲜味
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── FISH PAGE ── */
+function FishPage({ cooking, onNext, onBack }) {
+  const [sel, setSel] = useState(null);
+  const title = cooking === "cold" ? "冷锅鱼 — 选鱼种" : cooking === "pickled" ? "酸菜鱼 — 选鱼种" : "鱼火锅 — 选鱼种";
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:80}}>
+      <NavBar title={title} sub="每日新鲜活鱼" onBack={onBack} />
+      <div style={{padding:"20px 18px"}}>
+        {FISH.map(f => (
+          <Card key={f.id} selected={sel===f.id} onClick={() => setSel(f.id)} accent={C.gold}>
+            <div style={{display:"flex", alignItems:"center", gap:14}}>
+              <span style={{fontSize:40}}>🐟</span>
+              <div style={{flex:1}}>
+                <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:4}}>
+                  <span style={{fontSize:18, fontWeight:800, color:C.cream}}>{f.zh}</span>
+                  {f.tag==="热销" && <Badge text="热销" />}
+                  {f.tag==="精选" && <GoldBadge text="精选" />}
+                </div>
+                <div style={{fontSize:11, color:C.creamD, fontFamily:"sans-serif"}}>{f.en}</div>
+                <div style={{fontSize:12, color:C.goldD, fontFamily:"sans-serif", marginTop:3}}>{f.desc}</div>
+                <div style={{fontSize:11, color:C.green, marginTop:2, fontFamily:"sans-serif"}}>✦ {f.note}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:20, fontWeight:900, color:C.goldL, fontFamily:"Georgia,serif"}}>${f.price}</div>
+                <div style={{fontSize:9, color:C.creamD, fontFamily:"sans-serif"}}>AUD</div>
+                <div style={{marginTop:6}}><Radio on={sel===f.id} color={C.gold} /></div>
+              </div>
+            </div>
+          </Card>
+        ))}
+        <Btn label={cooking==="cold" ? "下一步：选麻辣度 →" : "下一步：选下鱼方式 →"} disabled={!sel} onClick={() => onNext(sel)} />
+      </div>
+    </div>
+  );
+}
+
+/* ── SPICE PAGE ── */
+function SpicePage({ onNext, onBack }) {
+  const [numb, setNumb] = useState(null);
+  const [spicy, setSpicy] = useState(null);
+  const SpiceGrid = ({ items, sel, onSel, label }) => (
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:13, color:C.goldL, fontWeight:700, marginBottom:10, fontFamily:"sans-serif"}}>{label}</div>
+      <div style={{display:"flex", gap:8}}>
+        {items.map(s => (
+          <button key={s.id} onClick={() => onSel(s.id)} style={{
+            flex:1, padding:"12px 4px", borderRadius:14, border:`2px solid ${sel===s.id ? C.ember : C.border}`,
+            background: sel===s.id ? `linear-gradient(135deg,${C.ember},${C.flame})` : C.card,
+            color: sel===s.id ? C.white : C.cream, cursor:"pointer", fontFamily:"Georgia,serif",
+          }}>
+            <div style={{fontSize:16, marginBottom:3}}>{"🌶️".repeat(s.n)}</div>
+            <div style={{fontSize:13, fontWeight:800}}>{s.zh}</div>
+            {s.rec && <div style={{marginTop:4}}><GoldBadge text="推荐" /></div>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:80}}>
+      <NavBar title="选择麻辣度" sub="分别选择麻度和辣度" onBack={onBack} />
+      <div style={{padding:"20px 18px"}}>
+        <div style={{background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"12px 14px", marginBottom:20, display:"flex", gap:8}}>
+          <span>💡</span>
+          <span style={{fontSize:12, color:C.creamD, fontFamily:"sans-serif"}}>初次尝试推荐 <span style={{color:C.goldL, fontWeight:700}}>中麻 + 中辣</span>，麻辣平衡</span>
+        </div>
+        <SpiceGrid label="🫙 麻度 Numbing Level" items={NUMBING} sel={numb} onSel={setNumb} />
+        <SpiceGrid label="🔥 辣度 Spicy Level" items={SPICY} sel={spicy} onSel={setSpicy} />
+        <Btn label="下一步：选下鱼方式 →" disabled={!numb||!spicy} onClick={() => onNext({numb, spicy})} />
+      </div>
+    </div>
+  );
+}
+
+/* ── QUANTITY PAGE ── */
+function QtyPage({ onNext, onBack }) {
+  const [sel, setSel] = useState(null);
+  const opts = [
+    { id:"full", emoji:"🔥", title:"全入辣锅", en:"All In Spicy (Recommended)", desc:"全部鱼肉入辣锅，汤底更鲜浓", badge:"推荐" },
+    { id:"half", emoji:"☯️", title:"半入辣锅", en:"Half In Spicy",             desc:"默认鱼肉全部放辣锅，如需留鱼到原汤请备注", badge:"推荐" },
+    { id:"self", emoji:"🥢", title:"自行涮煮", en:"Self Cook",                  desc:"鱼肉不预先入锅，自行涮烫享用", badge:"" },
+  ];
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:80}}>
+      <NavBar title="下鱼方式" sub="一份鱼适合 1–2 人" onBack={onBack} />
+      <div style={{padding:"20px 18px"}}>
+        {opts.map(o => (
+          <Card key={o.id} selected={sel===o.id} onClick={() => setSel(o.id)} accent={C.gold}>
+            <div style={{display:"flex", alignItems:"center", gap:14}}>
+              <span style={{fontSize:38}}>{o.emoji}</span>
+              <div style={{flex:1}}>
+                <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:4}}>
+                  <span style={{fontSize:17, fontWeight:800, color:C.cream}}>{o.title}</span>
+                  {o.badge && <GoldBadge text={o.badge} />}
+                </div>
+                <div style={{fontSize:11, color:C.creamD, fontFamily:"sans-serif", marginBottom:3}}>{o.en}</div>
+                <div style={{fontSize:12, color:C.creamD, fontFamily:"sans-serif"}}>{o.desc}</div>
+              </div>
+              <Radio on={sel===o.id} color={C.gold} />
+            </div>
+          </Card>
+        ))}
+        <Btn label="下一步 →" disabled={!sel} onClick={() => onNext(sel)} />
+      </div>
+    </div>
+  );
+}
+
+/* ── BROTH PAGE ── */
+function BrothPage({ mode, titleText, subText, allowSkip, onNext, onBack }) {
+  // mode: "single"=pick 1 | "twin"=pick 2 | "benz"=pick 3 | "choose"=pick pot type first
+  const [potType, setPotType] = useState(mode === "choose" ? null : mode);
+  const [sel, setSel] = useState([]);
+  const max = potType === "twin" ? 2 : potType === "benz" ? 3 : 1;
+
+  const toggle = (id) => setSel(prev => {
+    if (prev.includes(id)) return prev.filter(x => x !== id);
+    if (prev.length >= max) return [...prev.slice(1), id];
+    return [...prev, id];
+  });
+
+  const canNext = potType && sel.length === max;
+
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:80}}>
+      <NavBar title={titleText || "选择锅底"} sub={subText} onBack={onBack} />
+      <div style={{padding:"20px 18px"}}>
+
+        {/* Pot type selector — only when mode=choose */}
+        {mode === "choose" && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:13, color:C.creamD, marginBottom:10, fontFamily:"sans-serif"}}>选择锅型</div>
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8}}>
+              {[
+                {id:"single", icon:"🫕", label:"单锅",   sub:"选1种"},
+                {id:"twin",   icon:"☯️", label:"鸳鸯锅", sub:"选2种"},
+                {id:"benz",   icon:"✤",  label:"奔驰锅", sub:"选3种"},
+              ].map(p => (
+                <button key={p.id} onClick={() => { setPotType(p.id); setSel([]); }} style={{
+                  background: potType===p.id ? `linear-gradient(135deg,${C.goldD},${C.gold})` : C.card,
+                  color: potType===p.id ? C.bg : C.cream,
+                  border:`1.5px solid ${potType===p.id ? C.gold : C.border}`,
+                  borderRadius:12, padding:"12px 6px", cursor:"pointer", fontFamily:"Georgia,serif",
+                }}>
+                  <div style={{fontSize:22, marginBottom:3}}>{p.icon}</div>
+                  <div style={{fontSize:13, fontWeight:700}}>{p.label}</div>
+                  <div style={{fontSize:10, opacity:0.7, fontFamily:"sans-serif"}}>{p.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Broth grid */}
+        {(mode !== "choose" || potType) && (
+          <>
+            <div style={{display:"flex", justifyContent:"space-between", marginBottom:12, alignItems:"center"}}>
+              <div style={{fontSize:13, color:C.creamD, fontFamily:"sans-serif"}}>
+                {mode === "single" ? "选择锅底（1种）" : `选择锅底（选 ${max} 种）`}
+              </div>
+              {sel.length > 0 && (
+                <span style={{background:C.gold, color:C.bg, fontSize:11, fontWeight:800, padding:"3px 10px", borderRadius:20, fontFamily:"sans-serif"}}>
+                  已选 {sel.length}/{max}
+                </span>
+              )}
+            </div>
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
+              {BROTHS.map(b => {
+                const on = sel.includes(b.id);
+                const disabled = !on && sel.length >= max;
+                return (
+                  <div key={b.id} onClick={() => !disabled && toggle(b.id)} style={{
+                    background: on ? `${b.color}99` : C.card,
+                    border:`2px solid ${on ? b.acc : C.border}`,
+                    borderRadius:16, padding:"16px 12px", textAlign:"center",
+                    cursor: disabled ? "default" : "pointer",
+                    opacity: disabled ? 0.4 : 1, transition:"all 0.2s",
+                  }}>
+                    <div style={{fontSize:34, marginBottom:6}}>{b.emoji}</div>
+                    <div style={{fontSize:14, fontWeight:800, color:C.cream, marginBottom:2}}>{b.zh}</div>
+                    <div style={{fontSize:10, color:C.creamD, fontFamily:"sans-serif"}}>{b.en}</div>
+                    {on && <div style={{marginTop:8, background:b.acc, borderRadius:10, padding:"2px 8px", fontSize:10, color:C.white, fontFamily:"sans-serif"}}>✓ 已选</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <Btn label="下一步：加购配菜 →" disabled={!canNext} onClick={() => onNext(sel)} />
+        {allowSkip && (
+          <button onClick={() => onNext([])} style={{
+            width:"100%", background:"transparent", color:C.creamD,
+            border:`1px solid ${C.border}`, borderRadius:12, padding:"13px",
+            fontSize:13, cursor:"pointer", marginTop:10, fontFamily:"sans-serif",
+          }}>不升级，纯享鱼 →</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── ADDONS PAGE ── */
+function AddonsPage({ cart, setCart, onBack }) {
+  const [cat, setCat] = useState("热销首选");
+  const [portionTab, setPortionTab] = useState({});
+
+  const items = cat === "热销首选"
+    ? ADDONS.filter(a => a.hot)
+    : ADDONS.filter(a => a.cat === cat);
+
+  const getPortion = (id) => portionTab[id] || "full";
+  const halfP = (p) => Math.ceil(p * 60) / 100;
+  const cKey = (id, por) => `${id}_${por}`;
+  const getQty = (id, por) => cart.find(c => c.cKey === cKey(id,por))?.qty || 0;
+
+  const add = (item, por) => {
+    if (item.price === null) return;
+    const k = cKey(item.id, por);
+    const price = por === "half" ? halfP(item.price) : item.price;
+    setCart(prev => {
+      const ex = prev.find(c => c.cKey === k);
+      if (ex) return prev.map(c => c.cKey===k ? {...c, qty:c.qty+1} : c);
+      return [...prev, {...item, cKey:k, portion:por, price, zh:`${item.zh}${por==="half"?"（半份）":""}`}];
+    });
+  };
+
+  const sub = (id, por) => {
+    const k = cKey(id, por);
+    setCart(prev => {
+      const ex = prev.find(c => c.cKey===k);
+      if (!ex) return prev;
+      if (ex.qty === 1) return prev.filter(c => c.cKey!==k);
+      return prev.map(c => c.cKey===k ? {...c, qty:c.qty-1} : c);
+    });
+  };
+
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, color:C.cream, fontFamily:"Georgia,serif", paddingBottom:120}}>
+      <NavBar title="加购配菜" sub="荤菜素菜可选整份或半份" onBack={onBack} />
+
+      {/* Tabs */}
+      <div style={{display:"flex", gap:8, padding:"10px 18px", overflowX:"auto", background:C.surface, borderBottom:`1px solid ${C.border}`, scrollbarWidth:"none"}}>
+        {CATS.map(c => (
+          <button key={c} onClick={() => setCat(c)} style={{
+            background: cat===c ? (c==="儿童套餐" ? "#4A7A3A" : C.gold) : C.card,
+            color: cat===c ? C.bg : C.cream,
+            border:`1px solid ${cat===c ? (c==="儿童套餐"?"#4A7A3A":C.gold) : C.border}`,
+            borderRadius:20, padding:"7px 14px", fontSize:11, fontWeight:cat===c?700:400,
+            cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, fontFamily:"sans-serif",
+          }}>{CAT_ICONS[c]} {c}</button>
+        ))}
+      </div>
+
+      {/* Kids banner */}
+      {cat === "儿童套餐" && (
+        <div style={{margin:"12px 16px 0", background:"linear-gradient(135deg,#1A3A0A,#2E5A1A)", border:"1.5px solid #5A8A3A", borderRadius:14, padding:"12px 16px", display:"flex", gap:10, alignItems:"center"}}>
+          <span style={{fontSize:26}}>👦🍟</span>
+          <div>
+            <div style={{fontSize:13, fontWeight:700, color:"#A8D878", fontFamily:"Georgia,serif"}}>儿童套餐</div>
+            <div style={{fontSize:11, color:"#7AAA58", fontFamily:"sans-serif"}}>专为小朋友设计，无辣温和，营养均衡</div>
+          </div>
+        </div>
+      )}
+
+      {/* Grid */}
+      <div style={{padding:"12px 14px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
+        {items.map(item => {
+          const canHalf = item.half === true;
+          const por = canHalf ? getPortion(item.id) : "full";
+          const isHalf = canHalf && por === "half";
+          const q = getQty(item.id, por);
+          const hasAny = getQty(item.id,"full")>0 || getQty(item.id,"half")>0;
+          const isKids = item.cat === "儿童套餐";
+
+          return (
+            <div key={item.id} style={{
+              background: hasAny ? (isKids?"linear-gradient(135deg,#2A5A1A22,#1C1409)":`linear-gradient(135deg,${C.goldD}22,${C.card})`) : C.card,
+              border:`2px solid ${hasAny?(isKids?"#5A8A3A":C.goldD):C.border}`,
+              borderRadius:16, padding:"12px 10px", transition:"all 0.2s",
+            }}>
+              <div style={{fontSize:30, textAlign:"center", marginBottom:6}}>{item.emoji}</div>
+
+              <div style={{display:"flex", alignItems:"center", gap:4, marginBottom:2, flexWrap:"wrap"}}>
+                <span style={{fontSize:11, fontWeight:700, color:C.cream}}>{item.zh}</span>
+                {item.hot && <Badge text="热销" />}
+                {isKids && <Badge text="儿童" color={C.green} />}
+              </div>
+
+              <div style={{fontSize:9, color:C.creamD, fontFamily:"sans-serif", marginBottom:4}}>{item.en}</div>
+              {item.desc && <div style={{fontSize:9, color:C.creamD, fontFamily:"sans-serif", marginBottom:6, lineHeight:1.4}}>{item.desc}</div>}
+
+              {/* Half/Full toggle */}
+              {canHalf && (
+                <div style={{display:"flex", borderRadius:8, overflow:"hidden", border:`1px solid ${C.border}`, marginBottom:8}}>
+                  {["full","half"].map(p => (
+                    <button key={p} onClick={() => setPortionTab(prev => ({...prev,[item.id]:p}))} style={{
+                      flex:1, padding:"5px 0", border:"none", cursor:"pointer",
+                      background: por===p ? (p==="full"?C.gold:C.ember) : C.card,
+                      color: por===p ? C.bg : C.creamD,
+                      fontSize:10, fontWeight:por===p?800:400, fontFamily:"sans-serif",
+                    }}>
+                      {p==="full"?"整份":"半份"}
+                      {getQty(item.id,p)>0 && <span style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:C.white,marginLeft:3,verticalAlign:"middle"}} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Price + qty */}
+              <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+                <div>
+                  {item.price !== null ? (
+                    <>
+                      <span style={{fontSize:14, fontWeight:800, color:C.goldL, fontFamily:"Georgia,serif"}}>
+                        ${isHalf ? halfP(item.price).toFixed(2) : item.price.toFixed(2)}
+                      </span>
+                      <span style={{fontSize:8, color:C.creamD, fontFamily:"sans-serif", marginLeft:2}}>AUD</span>
+                    </>
+                  ) : (
+                    <span style={{fontSize:11, color:C.creamD, fontFamily:"sans-serif"}}>时价</span>
+                  )}
+                </div>
+                <div style={{display:"flex", alignItems:"center", gap:5}}>
+                  {q > 0 && (
+                    <>
+                      <button onClick={() => sub(item.id, por)} style={{width:24,height:24,borderRadius:"50%",background:C.border,border:"none",color:C.cream,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                      <span style={{color:C.goldL,fontWeight:700,minWidth:14,textAlign:"center",fontFamily:"sans-serif",fontSize:13}}>{q}</span>
+                    </>
+                  )}
+                  {item.price !== null && (
+                    <button onClick={() => add(item, por)} style={{
+                      width:24, height:24, borderRadius:"50%", border:"none",
+                      background: isHalf ? `linear-gradient(135deg,${C.ember},${C.flame})` : `linear-gradient(135deg,${C.gold},${C.orange})`,
+                      color:C.bg, fontSize:17, cursor:"pointer",
+                      display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900,
+                    }}>+</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── SUMMARY ── */
+function Summary({ cart, sel, guests, onBack, onConfirm }) {
+  const fish = FISH.find(f => f.id === sel.fish);
+  const addonTotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const potPrice = (sel.broths?.length > 0) ? 30 : 0;
+  const condimentFee = (guests || 1) * 3.50;
+  const total = (fish?.price || 0) + addonTotal + potPrice + condimentFee;
+
+  const Row = ({ label, value, hi }) => (
+    <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+      <span style={{fontSize:13,color:C.creamD,fontFamily:"sans-serif"}}>{label}</span>
+      <span style={{fontSize:13,color:hi?C.goldL:C.cream,fontWeight:hi?700:400,fontFamily:"sans-serif"}}>{value}</span>
+    </div>
+  );
+
+  const modeName = sel.mode==="fhp"?"🔥 鱼火锅" : sel.mode==="cold"?"🌶️ 冷锅鱼" : sel.mode==="pickled"?"🟡 酸菜鱼" : "🫕 单点火锅";
+
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,color:C.cream,fontFamily:"Georgia,serif",paddingBottom:30}}>
+      <NavBar title="确认订单" onBack={onBack} />
+      <div style={{padding:"20px 18px"}}>
+
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:"18px",marginBottom:12}}>
+          <div style={{fontSize:13,color:C.gold,fontWeight:700,marginBottom:12,fontFamily:"sans-serif"}}>🍽 主菜详情</div>
+          {fish && <Row label={`${modeName} · ${fish.zh}`} value={`$${fish.price} AUD`} hi />}
+          {sel.numbing && <Row label="麻度" value={NUMBING.find(n=>n.id===sel.numbing)?.zh||""} />}
+          {sel.spicy && <Row label="辣度" value={SPICY.find(s=>s.id===sel.spicy)?.zh||""} />}
+          {sel.qty && <Row label="下鱼方式" value={sel.qty==="full"?"全入辣锅":sel.qty==="half"?"半入辣锅":"自行涮煮"} />}
+          {sel.broths?.length > 0 && <Row label="锅底" value={sel.broths.map(id=>BROTHS.find(b=>b.id===id)?.zh).join(" + ")} />}
+          {potPrice > 0 && <Row label="锅底费" value={`$${potPrice.toFixed(2)} AUD`} />}
+          <Row label={`调料费 (${guests} 位 × $3.50)`} value={`$${condimentFee.toFixed(2)} AUD`} />
+        </div>
+
+        {cart.length > 0 && (
+          <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:"18px",marginBottom:12}}>
+            <div style={{fontSize:13,color:C.gold,fontWeight:700,marginBottom:12,fontFamily:"sans-serif"}}>➕ 加购配菜</div>
+            {cart.map(item => (
+              <Row key={item.cKey||item.id} label={`${item.zh} × ${item.qty}`} value={`$${(item.price*item.qty).toFixed(2)} AUD`} />
+            ))}
+          </div>
+        )}
+
+        <div style={{background:`linear-gradient(135deg,${C.goldD}33,${C.card})`,border:`2px solid ${C.goldD}`,borderRadius:18,padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <span style={{fontSize:15,fontWeight:700,color:C.cream}}>合计</span>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:26,fontWeight:900,color:C.goldL}}>${total.toFixed(2)}</div>
+            <div style={{fontSize:10,color:C.creamD,fontFamily:"sans-serif"}}>AUD · 含调料费</div>
+          </div>
+        </div>
+
+        <Btn label="🎉 确认下单" onClick={onConfirm} style={{boxShadow:`0 4px 20px rgba(180,60,20,0.5)`}} />
+      </div>
+    </div>
+  );
+}
+
+/* ── GUEST COUNT ── */
+function GuestCount({ onConfirm }) {
+  const [count, setCount] = useState(2);
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,color:C.cream,fontFamily:"Georgia,serif",display:"flex",flexDirection:"column"}}>
+      {/* Header */}
+      <div style={{padding:"18px 20px 14px",background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+        <div style={{fontSize:22,fontWeight:800,color:C.goldL,letterSpacing:3}}>香海鲜鱼庄</div>
+        <div style={{fontSize:10,color:C.creamD,letterSpacing:5,marginTop:2}}>SEA & SPICE</div>
+      </div>
+
+      <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"30px 24px"}}>
+        <div style={{fontSize:48,marginBottom:16}}>🪑</div>
+        <div style={{fontSize:22,fontWeight:800,color:C.cream,marginBottom:8,textAlign:"center"}}>今天几位用餐？</div>
+        <div style={{fontSize:13,color:C.creamD,fontFamily:"sans-serif",marginBottom:36,textAlign:"center"}}>
+          调料费 $3.50/位将自动计入账单
+        </div>
+
+        {/* Counter */}
+        <div style={{display:"flex",alignItems:"center",gap:24,marginBottom:40}}>
+          <button onClick={() => setCount(c => Math.max(1,c-1))} style={{
+            width:52,height:52,borderRadius:"50%",border:`2px solid ${C.border}`,
+            background:C.card,color:C.cream,fontSize:26,cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,
+          }}>−</button>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:56,fontWeight:900,color:C.goldL,lineHeight:1}}>{count}</div>
+            <div style={{fontSize:13,color:C.creamD,fontFamily:"sans-serif",marginTop:4}}>位</div>
+          </div>
+          <button onClick={() => setCount(c => Math.min(20,c+1))} style={{
+            width:52,height:52,borderRadius:"50%",border:`2px solid ${C.border}`,
+            background:C.card,color:C.cream,fontSize:26,cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,
+          }}>+</button>
+        </div>
+
+        {/* Quick select */}
+        <div style={{display:"flex",gap:10,marginBottom:36}}>
+          {[1,2,3,4,5,6].map(n => (
+            <button key={n} onClick={() => setCount(n)} style={{
+              width:44,height:44,borderRadius:"50%",
+              border:`2px solid ${count===n ? C.gold : C.border}`,
+              background: count===n ? `linear-gradient(135deg,${C.gold},${C.goldL})` : C.card,
+              color: count===n ? C.bg : C.cream,
+              fontSize:15,fontWeight:count===n?800:400,cursor:"pointer",fontFamily:"sans-serif",
+            }}>{n}</button>
+          ))}
+        </div>
+
+        {/* Fee preview */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"14px 20px",marginBottom:28,textAlign:"center",minWidth:200}}>
+          <div style={{fontSize:12,color:C.creamD,fontFamily:"sans-serif",marginBottom:4}}>调料费小计</div>
+          <div style={{fontSize:22,fontWeight:900,color:C.goldL}}>
+            ${(count * 3.50).toFixed(2)} <span style={{fontSize:12,fontWeight:400,color:C.creamD}}>AUD</span>
+          </div>
+          <div style={{fontSize:10,color:C.creamF,fontFamily:"sans-serif",marginTop:2}}>{count} 位 × $3.50</div>
+        </div>
+
+        <Btn label="开始点单 →" onClick={() => onConfirm(count)} style={{maxWidth:320,width:"100%"}} />
+      </div>
+    </div>
+  );
+}
+
+
+function Success({ onRestart }) {
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:40,fontFamily:"Georgia,serif"}}>
+      <div style={{fontSize:72,marginBottom:20}}>🎉</div>
+      <div style={{fontSize:24,fontWeight:900,color:C.goldL,marginBottom:8}}>下单成功！</div>
+      <div style={{fontSize:14,color:C.cream,marginBottom:6,fontFamily:"sans-serif"}}>您的美食正在精心烹制中</div>
+      <div style={{fontSize:12,color:C.creamD,marginBottom:32,fontFamily:"sans-serif"}}>预计 15–20 分钟上菜，请稍候享用</div>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"14px 20px",marginBottom:28,fontSize:12,color:C.creamD,fontFamily:"sans-serif",maxWidth:280,lineHeight:1.7}}>
+        💡 如需服务员协助点火或加汤，请随时招手
+      </div>
+      <button onClick={onRestart} style={{background:`linear-gradient(135deg,${C.gold},${C.orange})`,color:C.bg,border:"none",borderRadius:14,padding:"13px 32px",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"Georgia,serif"}}>
+        返回首页
+      </button>
+    </div>
+  );
+}
+
+/* ── APP ── */
+function App() {
+  const [screen, setScreen] = useState("guests");
+  const [sel, setSel] = useState({});
+  const [cart, setCart] = useState([]);
+  const [guests, setGuests] = useState(2);
+
+  const go = (s, extra={}) => { setSel(p => ({...p,...extra})); setScreen(s); };
+  const reset = () => { setScreen("guests"); setSel({}); setCart([]); setGuests(2); };
+
+  if (screen === "guests") return <GuestCount onConfirm={n => { setGuests(n); setScreen("home"); }} />;
+
+  if (screen === "home") return <Home onSelect={mode => {
+    setSel({mode});
+    if (mode === "fhp")     setScreen("fish_fhp");
+    if (mode === "cold")    { setSel({mode, cooking:"cold"});    setScreen("fish_direct"); }
+    if (mode === "pickled") { setSel({mode, cooking:"pickled"}); setScreen("fish_direct"); }
+    if (mode === "hotpot")  setScreen("broth_hp");
+    if (mode === "addons")  setScreen("addons");
+  }} />;
+
+  /* ── 鱼火锅 flow ── */
+  if (screen === "fish_fhp") return <FishPage cooking="fhp"
+    onBack={() => setScreen("home")}
+    onNext={fish => go("spice_fhp", {fish})}
+  />;
+  if (screen === "spice_fhp") return <SpicePage
+    onBack={() => setScreen("fish_fhp")}
+    onNext={({numb,spicy}) => go("qty_fhp", {numb,spicy})}
+  />;
+  if (screen === "qty_fhp") return <QtyPage
+    onBack={() => setScreen("spice_fhp")}
+    onNext={qty => go("broth_fhp", {qty})}
+  />;
+  if (screen === "broth_fhp") return <BrothPage mode="single"
+    titleText="选择内圈锅底" subText="鱼吃完后继续涮"
+    onBack={() => setScreen("qty_fhp")}
+    onNext={broths => go("addons", {broths})}
+  />;
+
+  /* ── 单点鱼 flow ── */
+  if (screen === "fish_direct") return <FishPage cooking={sel.cooking}
+    onBack={() => setScreen("home")}
+    onNext={fish => {
+      if (sel.cooking === "cold") go("spice_direct", {fish});
+      else go("qty_direct", {fish});
+    }}
+  />;
+  if (screen === "spice_direct") return <SpicePage
+    onBack={() => setScreen("fish_direct")}
+    onNext={({numb,spicy}) => go("qty_direct", {numb,spicy})}
+  />;
+  if (screen === "qty_direct") return <QtyPage
+    onBack={() => sel.cooking==="cold" ? setScreen("spice_direct") : setScreen("fish_direct")}
+    onNext={qty => go("broth_direct", {qty})}
+  />;
+  if (screen === "broth_direct") return <BrothPage mode="single"
+    titleText="🚀 升级鱼火锅？" subText="加一个锅底，鱼吃完继续涮"
+    allowSkip
+    onBack={() => setScreen("qty_direct")}
+    onNext={broths => go("addons", {broths})}
+  />;
+
+  /* ── 单点火锅 flow ── */
+  if (screen === "broth_hp") return <BrothPage mode="choose"
+    titleText="选择锅型与锅底"
+    onBack={() => setScreen("home")}
+    onNext={broths => go("addons", {broths})}
+  />;
+
+  /* ── Addons ── */
+  if (screen === "addons") return (
+    <>
+      <AddonsPage cart={cart} setCart={setCart} onBack={() => {
+        const m = sel.mode;
+        if (m==="addons")  setScreen("home");
+        else if (m==="fhp")     setScreen("broth_fhp");
+        else if (m==="hotpot")  setScreen("broth_hp");
+        else setScreen("broth_direct");
+      }} />
+      <CartBar cart={cart} onCheckout={() => setScreen("summary")} />
+      {cart.length === 0 && (
+        <div style={{position:"fixed",bottom:0,left:0,right:0,padding:"12px 20px",background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:C.creamD,fontFamily:"sans-serif"}}>配菜可跳过</span>
+          <button onClick={() => setScreen("summary")} style={{background:C.card,border:`1px solid ${C.border}`,color:C.cream,borderRadius:10,padding:"8px 16px",fontSize:12,cursor:"pointer",fontFamily:"sans-serif"}}>
+            跳过 → 确认下单
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (screen === "summary") return <Summary cart={cart} sel={sel} guests={guests}
+    onBack={() => setScreen("addons")}
+    onConfirm={() => setScreen("success")}
+  />;
+
+  if (screen === "success") return <Success onRestart={reset} />;
+
+  return null;
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+  </script>
+</body>
+</html>
